@@ -1240,7 +1240,7 @@ def build_home():
         f'<h3>{t}</h3><p>{d}</p></div>' for i, (t, d) in enumerate(steps, 1))
     check_notes = [
         ("이용 전 확인사항", ["정확한 주소와 공동현관 출입 방법, 주차 가능 여부, 조용한 공간, 예약자 본인의 연락 가능 여부를 미리 확인해 주세요."]),
-        ("위생 및 안전 안내", ["용품 위생 관리와 개인정보 보호를 기본 기준으로 운영하며, 만 19세 이상 대상의 건강관리 서비스로 불법·퇴폐 행위는 제공하지 않습니다."]),
+        ("위생 및 안전 안내", ["용품 위생과 개인정보 보호를 기본으로 운영하며, 만 19세 이상 대상의 건강관리 서비스로 불법·퇴폐 행위는 제공하지 않습니다."]),
     ]
     marquee_items = ["연중무휴 24시간 상담", "인천 전지역 방문", "지하철역 인근 안내",
                      "당일 예약 가능", "위생·안전 관리", "정찰 요금 안내"]
@@ -1278,7 +1278,7 @@ def build_home():
 <section class="block"><div class="wrap">
   <span class="eyebrow"><span class="pulse"></span>SERVICE</span>
   <h2 class="sec">인천 출장마사지·홈타이 서비스 안내</h2>
-  <p class="sec-lead">고객이 계신 장소로 찾아가는 방문형 건강관리 서비스입니다. 예약 시 위치·시간·코스를 확인해 진행합니다.</p>
+  <p class="sec-lead">고객이 계신 장소로 찾아가는 방문형 건강관리 서비스입니다.</p>
   <div class="grid g4" style="margin-top:28px">{services}</div>
 </div></section>
 
