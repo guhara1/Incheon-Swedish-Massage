@@ -504,7 +504,7 @@ def footer_html():
   <a href="/terms/">이용약관</a><a href="/youth/">청소년보호정책</a>
 </div>
 <div class="footer-bottom">
-  © 2026 {COMPANY['name']}. All rights reserved.
+  © 2026 {COMPANY['name']}. All rights reserved. · 콘텐츠 최종 업데이트 {UPDATED.replace('-', '.')}
   <div class="legal-note">본 서비스는 의료 행위가 아닌 건강관리(이완·휴식) 목적의 방문 관리 서비스이며, 만 19세 이상 성인을 대상으로 합니다. 불법·퇴폐 행위는 일절 제공하지 않습니다.</div>
 </div>
 </div></footer>"""
@@ -753,14 +753,24 @@ def byline():
             f'<span>감수 · {COMPANY["ceo"]} ({COMPANY["name"]} 대표)</span>'
             f'<span>최종 업데이트 · {UPDATED.replace("-", ".")}</span></div>')
 
+def og_image_obj():
+    # 선호 썸네일(스키마+og:image 동시 지정) — 1200×630 OG 커버
+    return {"@type": "ImageObject", "url": BASE_URL + "/assets/og-cover.jpg",
+            "width": 1200, "height": 630}
+
+def publisher_obj():
+    return {"@type": "Organization", "name": COMPANY["name"], "url": BASE_URL + "/",
+            "logo": {"@type": "ImageObject", "url": BASE_URL + "/icon-512.png",
+                     "width": 512, "height": 512}}
+
 def article_ld(title, desc, path):
     return {
         "@context": "https://schema.org", "@type": "Article",
         "headline": title, "description": desc, "inLanguage": "ko-KR",
         "author": {"@type": "Organization", "name": BRAND, "url": BASE_URL + "/about/"},
-        "publisher": {"@type": "Organization", "name": COMPANY["name"], "url": BASE_URL + "/"},
+        "publisher": publisher_obj(),
         "mainEntityOfPage": BASE_URL + path,
-        "image": BASE_URL + "/assets/og-cover.jpg",
+        "image": og_image_obj(),
         "datePublished": UPDATED, "dateModified": UPDATED,
     }
 
@@ -827,6 +837,8 @@ def org_ld():
         "@context": "https://schema.org", "@type": "Organization",
         "name": BRAND, "legalName": COMPANY["name"], "url": BASE_URL + "/",
         "telephone": PHONE_DISP,
+        "logo": {"@type": "ImageObject", "url": BASE_URL + "/icon-512.png", "width": 512, "height": 512},
+        "image": og_image_obj(),
         "address": {"@type": "PostalAddress",
                     "addressRegion": "인천광역시", "addressCountry": "KR"},
     }
@@ -847,6 +859,7 @@ def localbiz_ld(name=None, area="인천광역시", path="/"):
         "@type": "HealthAndBeautyBusiness",
         "name": name or BRAND, "url": BASE_URL + path,
         "telephone": PHONE_DISP, "priceRange": "₩₩",
+        "image": og_image_obj(),
         "areaServed": {"@type": "AdministrativeArea", "name": area},
         "address": {"@type": "PostalAddress",
                     "addressRegion": "인천광역시", "addressCountry": "KR"},
@@ -861,6 +874,7 @@ def service_ld(name, desc, path, area="인천광역시"):
         "name": name, "description": desc, "serviceType": "방문 건강관리(마사지) 서비스",
         "provider": {"@type": "Organization", "name": BRAND, "url": BASE_URL + "/"},
         "areaServed": {"@type": "AdministrativeArea", "name": area},
+        "image": og_image_obj(),
         "url": BASE_URL + path,
     }
 
@@ -1618,6 +1632,7 @@ def build_area_hub():
     coll = {
         "@context": "https://schema.org", "@type": "CollectionPage",
         "name": "인천 출장마사지 지역별 안내", "url": BASE_URL + "/incheon/area/",
+        "inLanguage": "ko-KR", "image": og_image_obj(), "isPartOf": {"@type": "WebSite", "url": BASE_URL + "/"},
         "hasPart": [{"@type": "WebPage", "name": g["name"],
                      "url": BASE_URL + f"/incheon/{g['slug']}/"} for g in GU],
     }
@@ -1888,6 +1903,7 @@ def build_stations_hub():
     coll = {
         "@context": "https://schema.org", "@type": "CollectionPage",
         "name": "인천 지하철역별 출장마사지 안내", "url": BASE_URL + "/incheon/stations/",
+        "inLanguage": "ko-KR", "image": og_image_obj(), "isPartOf": {"@type": "WebSite", "url": BASE_URL + "/"},
         "hasPart": [{"@type": "WebPage", "name": ln["name"],
                      "url": BASE_URL + f"/incheon/stations/{ln['slug']}/"} for ln in LINES],
     }
@@ -2085,6 +2101,7 @@ def build_theme_hub():
     coll = {
         "@context": "https://schema.org", "@type": "CollectionPage",
         "name": "인천 출장마사지 테마별 안내", "url": BASE_URL + "/theme/",
+        "inLanguage": "ko-KR", "image": og_image_obj(), "isPartOf": {"@type": "WebSite", "url": BASE_URL + "/"},
         "hasPart": [{"@type": "WebPage", "name": t["name"],
                      "url": BASE_URL + f"/theme/{t['slug']}/"} for t in THEMES],
     }
