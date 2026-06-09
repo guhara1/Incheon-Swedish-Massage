@@ -28,6 +28,7 @@ PHONE_DISP = "0508-202-4743"                     # 예약 전화번호
 PHONE_TEL  = "+825082024743"                     # tel: 링크용
 HOURS      = "연중무휴 · 24시간 상담"
 INDEXNOW_KEY = "266ed468d0f42370ae86dd1b39e32e92"   # IndexNow(빙·네이버 등) 인증 키
+NAVER_VERIFY = "062e89d3c7f9815e32be50bce53ddc2c74c988cd"  # 네이버 서치어드바이저 사이트 소유확인(메인페이지)
 
 COMPANY = {
     "name": "인천굿데이마사지",
@@ -555,6 +556,8 @@ def page(path, title, desc, active, body, jsonld=None, og_type="website"):
             for b in blocks
         )
     og_img = BASE_URL + "/assets/og-cover.jpg"
+    # 네이버 서치어드바이저 사이트 소유확인 — 메인페이지에만 노출
+    verify = f'\n<meta name="naver-site-verification" content="{NAVER_VERIFY}">' if path == "/" else ""
     html = f"""<!doctype html>
 <html lang="ko">
 <head>
@@ -567,7 +570,7 @@ def page(path, title, desc, active, body, jsonld=None, og_type="website"):
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>{title}</title>
 <meta name="description" content="{desc}">
-<meta name="author" content="{COMPANY['name']} 운영팀">
+<meta name="author" content="{COMPANY['name']} 운영팀">{verify}
 <link rel="canonical" href="{canonical}">
 <link rel="alternate" hreflang="ko-KR" href="{canonical}">
 <link rel="alternate" hreflang="x-default" href="{canonical}">
