@@ -64,9 +64,22 @@ python3 tools/gen_icons.py  # 파비콘 / PWA 아이콘 / OG 이미지 생성 (P
 > ⚠️ `COMPANY`의 사업자 정보는 플레이스홀더입니다. 실제 사업자 정보가 확정되기 전까지
 > 푸터·`LocalBusiness` 스키마에 노출되며, 허위 후기 구조화 데이터(aggregateRating)는 넣지 않았습니다.
 
-## 색인 즉시 통보 (IndexNow)
+## 색인 파일 & 빠른 색인 자동화
 
-- 인증 키 파일은 빌드 시 루트에 자동 생성됩니다(`<KEY>.txt`).
-- 수동 제출: `python3 tools/indexnow.py --all | --changed | <URL> [--dry-run]`
-- `.github/workflows/indexnow.yml`: `main` 푸시(페이지/사이트맵 변경) 시 자동 제출.
-- 네이버 서치어드바이저 + Bing 웹마스터에 사이트 등록 및 sitemap 1회 제출, Google Search Console 등록 권장.
+빌드 시 루트에 함께 생성됩니다:
+
+| 파일 | 용도 |
+|---|---|
+| `sitemap.xml` | 색인 대상 218개 URL + `<lastmod>`·`changefreq`·`priority` (얇은 페이지 제외) |
+| `rss.xml` | RSS 2.0 피드(전 색인 페이지, 제목·설명·pubDate) — **네이버 서치어드바이저 RSS 제출** / 구글 피드 발견용 |
+| `robots.txt` | `Sitemap: sitemap.xml` + `Sitemap: rss.xml`, 네이버(Yeti)·Bingbot·Googlebot 허용 |
+| `<KEY>.txt` | IndexNow 인증 키 파일 |
+
+**빠른 색인 스택:**
+1. **IndexNow** (빙·네이버·얀덱스 즉시, 무료): `python3 tools/indexnow.py --all | --changed | <URL> [--dry-run]`
+2. **Google Indexing API** (구글, 보조): `python3 tools/google_indexing.py --all | --changed | <URL>` — 서비스계정 JSON + `pip install google-auth` 필요. ⚠️ 공식 지원은 JobPosting/BroadcastEvent 한정이라 일반 페이지는 보조용.
+3. **자동화**: `.github/workflows/indexnow.yml` — `main` 푸시(`index.html`·`sitemap.xml`·`rss.xml` 변경) 시 IndexNow `--changed` 자동 제출, `GOOGLE_INDEXING_SA` 시크릿이 있으면 Indexing API `--changed`도 호출.
+
+> ⚠️ **sitemap ping 미사용**: 구글·빙의 `ping?sitemap=` 엔드포인트는 2023년 폐지(404)되었습니다. 대신 위 IndexNow·Indexing API + Search Console/서치어드바이저의 `sitemap.xml`·`rss.xml` 1회 제출로 대체합니다.
+
+**1회 수동 작업(권장):** Google Search Console·네이버 서치어드바이저·Bing 웹마스터에 사이트 등록 → `sitemap.xml`(과 네이버는 `rss.xml`) 제출 → 네이버 서치어드바이저에서 IndexNow 사용 설정.

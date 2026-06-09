@@ -14,6 +14,9 @@ import os
 import json
 import re
 import hashlib
+import datetime
+from email.utils import format_datetime
+from xml.sax.saxutils import escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -2800,15 +2803,19 @@ def build_meta_files():
     for u in urls:
         if u not in seen:
             seen.add(u); ordered.append(u)
-    # 본문 2,000자 미만 페이지는 noindex 처리하고 sitemap에서 제외(블루프린트 §8 규칙)
+    # 본문 2,000자 미만 페이지는 noindex 처리하고 sitemap/RSS에서 제외(블루프린트 §8 규칙)
     thin = apply_noindex_threshold(ordered)
+    indexable = [u for u in ordered if u not in thin]
+    lastmod = UPDATED  # W3C 날짜(YYYY-MM-DD) — sitemap lastmod 유효 형식
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    pub = format_datetime(datetime.datetime.strptime(UPDATED, "%Y-%m-%d").replace(tzinfo=kst))
+
+    # --- sitemap.xml (lastmod 포함) ---
     items = ""
-    for u in ordered:
-        if u in thin:
-            continue
+    for u in indexable:
         p = "1.0" if u == "/" else ("0.85" if u.count("/") <= 2 else "0.75")
         freq = "daily" if u == "/" else "weekly"
-        items += (f"  <url><loc>{BASE_URL}{u}</loc>"
+        items += (f"  <url><loc>{BASE_URL}{u}</loc><lastmod>{lastmod}</lastmod>"
                   f"<changefreq>{freq}</changefreq><priority>{p}</priority></url>\n")
     sitemap = ('<?xml version="1.0" encoding="UTF-8"?>\n'
                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -2816,11 +2823,46 @@ def build_meta_files():
     with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(sitemap)
 
+    # --- rss.xml (네이버 서치어드바이저 RSS 제출 / 구글 피드 기반 발견용) ---
+    def page_meta(u):
+        rel = "index.html" if u == "/" else os.path.join(u.strip("/"), "index.html")
+        try:
+            h = open(os.path.join(ROOT, rel), encoding="utf-8").read()
+            t = re.search(r"<title>(.*?)</title>", h).group(1)
+            d = re.search(r'name="description" content="(.*?)"', h).group(1)
+            return t, d
+        except Exception:
+            return BRAND, ""
+    rss_items = ""
+    for u in indexable:
+        t, d = page_meta(u)
+        loc = BASE_URL + u
+        rss_items += (f"  <item><title>{escape(t)}</title><link>{loc}</link>"
+                      f'<guid isPermaLink="true">{loc}</guid>'
+                      f"<pubDate>{pub}</pubDate><description>{escape(d)}</description></item>\n")
+    rss = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
+           '<channel>\n'
+           f'  <title>{escape(BRAND)} · 인천 출장마사지·홈타이</title>\n'
+           f'  <link>{BASE_URL}/</link>\n'
+           f'  <atom:link href="{BASE_URL}/rss.xml" rel="self" type="application/rss+xml"/>\n'
+           '  <description>인천 전지역 출장마사지·홈타이 방문 예약 안내 — 지역·역세권·테마·코스 페이지 피드</description>\n'
+           '  <language>ko-kr</language>\n'
+           f'  <lastBuildDate>{pub}</lastBuildDate>\n'
+           + rss_items + '</channel>\n</rss>\n')
+    with open(os.path.join(ROOT, "rss.xml"), "w", encoding="utf-8") as f:
+        f.write(rss)
+
+    # --- robots.txt (sitemap + rss 동시 노출, 주요 봇 허용) ---
     robots = ("User-agent: *\nAllow: /\nDisallow: /tools/\n\n"
+              "User-agent: Googlebot\nAllow: /\n"
+              "User-agent: Yeti\nAllow: /\n"          # 네이버 크롤러
+              "User-agent: Bingbot\nAllow: /\n"
               "User-agent: GPTBot\nAllow: /\n"
               "User-agent: ClaudeBot\nAllow: /\n"
               "User-agent: Google-Extended\nAllow: /\n\n"
               f"Sitemap: {BASE_URL}/sitemap.xml\n"
+              f"Sitemap: {BASE_URL}/rss.xml\n"
               f"Host: {BASE_URL.replace('https://','')}\n")
     with open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8") as f:
         f.write(robots)

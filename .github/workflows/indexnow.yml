@@ -10,6 +10,7 @@ on:
     paths:
       - '**/index.html'
       - 'sitemap.xml'
+      - 'rss.xml'
   workflow_dispatch:        # 수동 실행도 허용
 
 permissions:
@@ -39,6 +40,7 @@ jobs:
         run: python3 tools/indexnow.py --changed
 
       # ── 선택: Google Indexing API (서비스계정 시크릿이 있을 때만) ──
+      # 구글은 IndexNow 미참여 → 변경 URL만 Indexing API로 통보(쿼터 200/일 절약)
       - name: Google Indexing API (optional)
         if: ${{ secrets.GOOGLE_INDEXING_SA != '' }}
         env:
@@ -47,5 +49,9 @@ jobs:
           printf '%s' "$GOOGLE_INDEXING_SA" > /tmp/gsa.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gsa.json
           python3 -m pip install --quiet google-auth
-          python3 tools/google_indexing.py --all
+          python3 tools/google_indexing.py --changed
           rm -f /tmp/gsa.json
+
+      # 참고: 구글·빙의 sitemap "ping" 엔드포인트는 2023년 폐지(404)되어 추가하지 않음.
+      # 빠른 색인은 위 IndexNow(빙·네이버 즉시) + Google Indexing API + Search Console/
+      # 네이버 서치어드바이저의 sitemap.xml·rss.xml 1회 제출 조합으로 처리한다.

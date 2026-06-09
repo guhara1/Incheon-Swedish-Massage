@@ -20,12 +20,33 @@
   python3 tools/google_indexing.py https://.../a/  # 특정 URL
   python3 tools/google_indexing.py --all --delete  # 색인 삭제 통보(URL_DELETED)
 """
-import os, sys, json, re, glob, urllib.request, urllib.error
+import os, sys, json, re, glob, subprocess, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = "https://incheon-swedish-massage.pages.dev"
 API = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 SCOPE = "https://www.googleapis.com/auth/indexing"
+
+
+def path_to_url(rel):
+    rel = rel.replace(os.sep, "/")
+    if rel == "index.html":
+        return BASE + "/"
+    if rel.endswith("/index.html"):
+        return BASE + "/" + rel[:-len("index.html")]
+    return None
+
+
+def urls_changed():
+    """직전 커밋 대비 변경된 index.html → URL (Indexing API 200/일 쿼터 절약)."""
+    try:
+        out = subprocess.check_output(
+            ["git", "diff", "--name-only", "--diff-filter=ACMR", "HEAD~1", "HEAD"],
+            cwd=ROOT, text=True)
+    except subprocess.CalledProcessError:
+        out = ""
+    urls = [path_to_url(f) for f in out.splitlines() if f.endswith("index.html")]
+    return [u for u in urls if u]
 
 
 def get_token():
@@ -64,6 +85,8 @@ def main(argv):
     args = [a for a in argv if a not in ("--delete",)]
     if "--all" in args:
         urls = urls_from_sitemap()
+    elif "--changed" in args:
+        urls = urls_changed() or urls_from_sitemap()  # 변경 없으면 전체로 폴백
     else:
         urls = [a for a in args if a.startswith("http")]
     if not urls:

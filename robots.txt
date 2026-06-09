@@ -2,6 +2,12 @@ User-agent: *
 Allow: /
 Disallow: /tools/
 
+User-agent: Googlebot
+Allow: /
+User-agent: Yeti
+Allow: /
+User-agent: Bingbot
+Allow: /
 User-agent: GPTBot
 Allow: /
 User-agent: ClaudeBot
@@ -10,4 +16,5 @@ User-agent: Google-Extended
 Allow: /
 
 Sitemap: https://incheon-swedish-massage.pages.dev/sitemap.xml
+Sitemap: https://incheon-swedish-massage.pages.dev/rss.xml
 Host: incheon-swedish-massage.pages.dev
